@@ -25,7 +25,7 @@ export const DEFAULTS = {
   wireColor: '#00b4ff', jointColor: '#ff4060', aura: 0.02,
   field: 0.45, waves: 0.4, ambient: 0.7, reflect: 0.2,
   fov: 50, orbitSpeed: 0.15, grid: true, room: true,
-  scenario: 'auto', cycle: 30, dataSource: 'demo', wsUrl: 'ws://87.99.158.55:3000/ws/sensing',
+  scenario: 'auto', cycle: 30, dataSource: 'demo', wsUrl: 'wss://87.99.158.55/ws/sensing',
 };
 
 export const SETTINGS_VERSION = '7';

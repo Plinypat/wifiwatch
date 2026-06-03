@@ -440,7 +440,7 @@ class Observatory {
     const host = window.location.hostname || 'localhost';
     const candidates = [
       window.location.origin,                   // same origin (e.g. :3000)
-      'http://87.99.158.55:3000',               // Hetzner sensing server
+      'https://87.99.158.55',                   // Hetzner sensing server (TLS via nginx)
       `http://${host}:8765`,                     // default WS port
       `http://${host}:3000`,                     // default HTTP port
     ];
