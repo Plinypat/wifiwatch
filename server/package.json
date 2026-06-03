@@ -1,0 +1,19 @@
+{
+  "name": "ruview-sensing-server",
+  "version": "1.0.0",
+  "description": "RuView WiFi sensing backend — ingests CSI from ESP32 nodes, processes into sensing frames, and streams to Observatory frontend.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.16.0",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

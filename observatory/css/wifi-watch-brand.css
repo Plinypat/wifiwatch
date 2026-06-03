@@ -1,0 +1,113 @@
+/* ============================================================
+   WiFi Watch — Brand Override
+   Layered on top of observatory.css to replace RuView colors,
+   fonts, and identity without touching the layout engine.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+/* ---- Brand tokens ---- */
+:root {
+  /* Core palette: deep navy + electric blue + coral accent */
+  --bg-deep:            #060a12;
+  --bg-panel:           rgba(6, 14, 28, 0.88);
+  --bg-panel-border:    rgba(0, 180, 255, 0.22);
+
+  /* Primary: electric blue (replaces RuView green) */
+  --green-glow:         #00b4ff;
+  --green-bright:       #38d4ff;
+  --green-dim:          #083860;
+
+  /* Accent: coral / amber (replaces amber) */
+  --amber:              #ff6b35;
+  --amber-dim:          #8a2d10;
+
+  /* Signal blue — same role, different shade */
+  --blue-signal:        #6c8eff;
+  --blue-dim:           #1a2860;
+
+  /* Alerts stay red */
+  --red-alert:          #ff3a4a;
+  --red-heart:          #ff5060;
+
+  /* Typography */
+  --text-primary:       #dff0ff;
+  --text-secondary:     rgba(223, 240, 255, 0.55);
+  --text-label:         rgba(223, 240, 255, 0.38);
+}
+
+/* ---- Font swap ---- */
+body {
+  font-family: 'Outfit', -apple-system, sans-serif;
+}
+
+/* ---- Brand logo block ---- */
+#brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--green-bright);
+  text-shadow: 0 0 12px rgba(0, 180, 255, 0.7);
+}
+
+.ww-logo-icon {
+  width: 26px;
+  height: 26px;
+  color: var(--green-glow);
+  flex-shrink: 0;
+}
+
+#brand-tagline {
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-label);
+  margin-top: 2px;
+}
+
+/* ---- Panel borders use blue instead of green ---- */
+.data-panel {
+  border-color: var(--bg-panel-border);
+  background: var(--bg-panel);
+}
+
+.data-panel::before {
+  background: linear-gradient(135deg,
+    rgba(0, 180, 255, 0.12),
+    transparent 60%);
+}
+
+/* ---- Presence indicator accent ---- */
+.presence--present {
+  color: var(--green-bright);
+  text-shadow: 0 0 8px rgba(0, 180, 255, 0.8);
+}
+
+/* ---- Settings dialog accent ---- */
+.settings-dialog {
+  border-color: rgba(0, 180, 255, 0.3);
+}
+
+.stab.active {
+  color: var(--green-bright);
+  border-bottom-color: var(--green-glow);
+}
+
+/* ---- Sparkline canvas tint ---- */
+#rssi-sparkline {
+  filter: hue-rotate(200deg) saturate(1.2);
+}
+
+/* ---- Vercel deployment hint in corner ---- */
+#brand::after {
+  content: 'WiFi Watch Platform';
+  display: block;
+  font-size: 0.55rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(0, 180, 255, 0.3);
+  margin-top: 4px;
+}
