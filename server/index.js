@@ -49,15 +49,25 @@ app.get('/api/status', (_req, res) => {
   });
 });
 
+// Map Observatory scenario names → server scenario IDs
+const SCENARIO_MAP = {
+  single_breathing: 'single_breathing', vitals: 'single_breathing',
+  sleep_monitoring: 'sleep_monitoring', sleep: 'sleep_monitoring',
+  two_walking: 'two_walking', fall_event: 'fall_event',
+  intrusion_detect: 'intrusion_detect', gesture_control: 'gesture_control',
+  crowd_occupancy: 'crowd_occupancy', search_rescue: 'search_rescue',
+  elderly_care: 'elderly_care', fitness_tracking: 'fitness_tracking',
+  security_patrol: 'security_patrol', empty_room: 'empty_room',
+  presence: 'single_breathing', pose: 'two_walking',
+  mat: 'search_rescue', pointcloud: 'two_walking',
+};
+
 app.post('/api/app/start', (req, res) => {
   const { app: appId = 'presence', params = {} } = req.body;
-  const valid = ['presence', 'vitals', 'pose', 'sleep', 'mat', 'pointcloud'];
-  if (!valid.includes(appId)) {
-    return res.status(400).json({ error: `Unknown app "${appId}". Valid: ${valid.join(', ')}` });
-  }
+  const scenario = SCENARIO_MAP[appId] || 'single_breathing';
   state.activeApp = appId;
   state.appParams = params;
-  demoEmitter.setApp(appId);
+  demoEmitter.setScenario(scenario);
   console.log(`[server] App started: ${appId}`, params);
   res.json({ ok: true, app: appId });
 });

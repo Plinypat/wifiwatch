@@ -49,13 +49,25 @@ export class DemoEmitter {
     this._app = app;
   }
 
+  setScenario(scenario) {
+    const idx = SCENARIOS.indexOf(scenario);
+    if (idx >= 0) {
+      this._scenarioIndex = idx;
+      this._scenarioTimer = 0;
+      this._pinned = true;
+    }
+  }
+
   next() {
     this._t += this._dt;
-    this._scenarioTimer += this._dt;
 
-    if (this._scenarioTimer >= CYCLE_S) {
-      this._scenarioTimer = 0;
-      this._scenarioIndex = (this._scenarioIndex + 1) % SCENARIOS.length;
+    // Only auto-cycle if not pinned to a specific scenario
+    if (!this._pinned) {
+      this._scenarioTimer += this._dt;
+      if (this._scenarioTimer >= CYCLE_S) {
+        this._scenarioTimer = 0;
+        this._scenarioIndex = (this._scenarioIndex + 1) % SCENARIOS.length;
+      }
     }
 
     const t = this._t;

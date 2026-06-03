@@ -293,12 +293,29 @@ export class HudController {
     const sel = document.getElementById('scenario-quick-select');
     if (!sel) return;
     sel.addEventListener('change', (e) => {
-      this._obs._demoData.setScenario(e.target.value);
+      const scenario = e.target.value;
+      this._obs._demoData.setScenario(scenario);
       const settingsSel = document.getElementById('opt-scenario');
-      if (settingsSel) settingsSel.value = e.target.value;
-      this._obs.settings.scenario = e.target.value;
+      if (settingsSel) settingsSel.value = scenario;
+      this._obs.settings.scenario = scenario;
+      this._notifyServer(scenario);
       this.saveSettings();
     });
+  }
+
+  _notifyServer(scenario) {
+    // Tell the server which scenario to emit when connected via WS
+    if (this._obs.settings.dataSource !== 'ws') return;
+    const wsUrl = this._obs.settings.wsUrl || '';
+    if (!wsUrl) return;
+    try {
+      const url = new URL(wsUrl.replace(/^wss?/, 'https'));
+      fetch(`${url.origin}/api/app/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ app: scenario === 'auto' ? 'presence' : scenario }),
+      }).catch(() => {});
+    } catch {}
   }
 
   // ============================================================
