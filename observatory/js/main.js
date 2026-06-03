@@ -569,7 +569,7 @@ class Observatory {
     const pos = this._mistPoints.geometry.attributes.position;
     const alpha = this._mistPoints.geometry.attributes.alpha;
 
-    if (!isPresent || persons.length === 0) {
+    if (!isPresent || persons.length === 0 || this.settings.aura <= 0) {
       for (let i = 0; i < this._mistCount; i++) {
         alpha.array[i] = Math.max(0, alpha.array[i] - 0.02);
       }
@@ -608,7 +608,8 @@ class Observatory {
       pos.array[i * 3 + 1] += (layerY - pos.array[i * 3 + 1]) * 0.05;
       pos.array[i * 3 + 2] += (tz - pos.array[i * 3 + 2]) * 0.05;
 
-      const targetAlpha = 0.15 + Math.sin(elapsed * 2 + i * 0.5) * 0.08;
+      const auraScale = this.settings.aura / 0.02;
+      const targetAlpha = (0.15 + Math.sin(elapsed * 2 + i * 0.5) * 0.08) * Math.min(1, auraScale);
       alpha.array[i] += (targetAlpha - alpha.array[i]) * 0.08;
     }
     pos.needsUpdate = true;
