@@ -6,6 +6,7 @@
 set -euo pipefail
 
 REPO="https://github.com/Plinypat/wifiwatch.git"
+BRANCH="claude/optimistic-newton-h85kc"
 APP_DIR="/opt/ruview"
 SERVICE_USER="ruview"
 PORT=3000
@@ -19,9 +20,11 @@ id "$SERVICE_USER" &>/dev/null || useradd -r -m -s /bin/bash "$SERVICE_USER"
 
 echo "==> Cloning / updating repo"
 if [ -d "$APP_DIR/.git" ]; then
-  git -C "$APP_DIR" pull --rebase
+  git -C "$APP_DIR" fetch origin
+  git -C "$APP_DIR" checkout "$BRANCH"
+  git -C "$APP_DIR" pull --rebase origin "$BRANCH"
 else
-  git clone "$REPO" "$APP_DIR"
+  git clone --branch "$BRANCH" "$REPO" "$APP_DIR"
 fi
 chown -R "$SERVICE_USER:$SERVICE_USER" "$APP_DIR"
 
