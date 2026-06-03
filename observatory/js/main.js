@@ -616,15 +616,17 @@ class Observatory {
   }
 
   _updateParticleTrail(data, dt, elapsed) {
+    const ages = this._trail.geometry.attributes.age;
+    // Always age out particles so they fade even when trail is disabled
+    for (let i = 0; i < this._trailCount; i++) {
+      ages.array[i] = Math.min(1, ages.array[i] + dt * 0.8);
+    }
+    ages.needsUpdate = true;
+
     if (this.settings.trail <= 0) return;
     const persons = data?.persons || [];
     const isPresent = data?.classification?.presence || false;
     const pos = this._trail.geometry.attributes.position;
-    const ages = this._trail.geometry.attributes.age;
-
-    for (let i = 0; i < this._trailCount; i++) {
-      ages.array[i] = Math.min(1, ages.array[i] + dt * 0.8);
-    }
 
     // Emit from all active persons
     if (isPresent && persons.length > 0) {
@@ -646,7 +648,6 @@ class Observatory {
       }
     }
     pos.needsUpdate = true;
-    ages.needsUpdate = true;
   }
 
   // ---- WiFi Waves ----
