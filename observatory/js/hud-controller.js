@@ -375,7 +375,8 @@ export class HudController {
 
   updateHUD(data, demoData) {
     if (!data) return;
-    const vs = data.vital_signs || {};
+    // Support both field name conventions
+    const vs = data.vital_signs || data.vitals || (data.persons?.[0]) || {};
     const feat = data.features || {};
     const cls = data.classification || {};
 
@@ -417,7 +418,8 @@ export class HudController {
     this._setBarColor('br-bar', vitalColor('br', this._lerpBr));
     this._setBarColor('conf-bar', vitalColor('conf', this._lerpConf));
 
-    this._setText('rssi-value', `${Math.round(feat.mean_rssi || 0)} dBm`);
+    const rssi = feat.mean_rssi ?? data.rssi_dbm ?? 0;
+    this._setText('rssi-value', `${Math.round(rssi)} dBm`);
     this._setText('var-value', (feat.variance || 0).toFixed(2));
     this._setText('motion-value', (feat.motion_band_power || 0).toFixed(3));
 
@@ -452,7 +454,7 @@ export class HudController {
   // ============================================================
 
   updateSparkline(data) {
-    const rssi = data?.features?.mean_rssi;
+    const rssi = data?.features?.mean_rssi ?? data?.rssi_dbm;
     if (rssi == null || !this._sparklineCtx) return;
     this._rssiHistory.push(rssi);
     if (this._rssiHistory.length > 60) this._rssiHistory.shift();
