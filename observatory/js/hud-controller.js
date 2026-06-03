@@ -391,11 +391,15 @@ export class HudController {
     const targetBr = vs.breathing_rate_bpm || 0;
     const targetConf = Math.round((cls.confidence || 0) * 100);
 
-    // Smooth lerp transitions (blend 4% per frame toward target — very stable)
-    const lerpFactor = 0.04;
-    this._lerpHr = targetHr > 0 ? lerp(this._lerpHr, targetHr, lerpFactor) : 0;
-    this._lerpBr = targetBr > 0 ? lerp(this._lerpBr, targetBr, lerpFactor) : 0;
-    this._lerpConf = targetConf > 0 ? lerp(this._lerpConf, targetConf, lerpFactor) : 0;
+    // Snap immediately if lerp value is at zero (first reading), then smooth after
+    const lerpFactor = 0.12;
+    if (targetHr > 0 && this._lerpHr < 1) this._lerpHr = targetHr;
+    if (targetBr > 0 && this._lerpBr < 1) this._lerpBr = targetBr;
+    if (targetConf > 0 && this._lerpConf < 1) this._lerpConf = targetConf;
+
+    this._lerpHr = targetHr > 0 ? lerp(this._lerpHr, targetHr, lerpFactor) : lerp(this._lerpHr, 0, 0.05);
+    this._lerpBr = targetBr > 0 ? lerp(this._lerpBr, targetBr, lerpFactor) : lerp(this._lerpBr, 0, 0.05);
+    this._lerpConf = targetConf > 0 ? lerp(this._lerpConf, targetConf, lerpFactor) : lerp(this._lerpConf, 0, 0.05);
 
     const dispHr = this._lerpHr > 1 ? Math.round(this._lerpHr) : '--';
     const dispBr = this._lerpBr > 1 ? Math.round(this._lerpBr) : '--';
