@@ -1,0 +1,15 @@
+{
+  "schema_version": "1",
+  "plugins": [
+    {
+      "name": "ruview",
+      "id": "ruview@ruview",
+      "version": "1.0.0",
+      "description": "Full WiFi-sensing workflow plugin: ESP32 onboarding, firmware flash, provisioning, sensing apps, model training, multistatic advanced sensing, CLI/API/WASM, mmWave radar, and witness verification.",
+      "author": "ruvnet",
+      "license": "MIT",
+      "tags": ["wifi-sensing", "esp32", "mmwave", "csi", "iot", "ml"],
+      "path": "plugins/ruview"
+    }
+  ]
+}

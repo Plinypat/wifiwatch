@@ -1,0 +1,33 @@
+{
+  "schema_version": "1",
+  "name": "ruview",
+  "version": "1.0.0",
+  "description": "Claude Code plugin that wraps the complete RuView WiFi-sensing workflow as skills, slash commands, and agents.",
+  "author": "ruvnet",
+  "license": "MIT",
+  "skills": [
+    "onboarding",
+    "esp32-setup",
+    "configuration",
+    "sensing-apps",
+    "model-training",
+    "advanced-sensing",
+    "cli-api-wasm",
+    "mmwave-radar",
+    "witness-verification"
+  ],
+  "commands": {
+    "/ruview-start":    { "skill": "onboarding",            "description": "Onboarding wizard — Docker demo, repo build, or live ESP32" },
+    "/ruview-flash":    { "skill": "esp32-setup",           "description": "Build and flash ESP32 firmware" },
+    "/ruview-provision":{ "skill": "configuration",         "description": "Provision WiFi creds, sink IP, channel/MAC, mesh slots" },
+    "/ruview-app":      { "skill": "sensing-apps",          "description": "Run a sensing application (presence/vitals/pose/sleep/MAT/point-cloud)" },
+    "/ruview-train":    { "skill": "model-training",        "description": "Train, evaluate, and publish a model (incl. GPU on GCloud)" },
+    "/ruview-advanced": { "skill": "advanced-sensing",      "description": "Multistatic, tomography, cross-viewpoint, mesh-security" },
+    "/ruview-verify":   { "skill": "witness-verification",  "description": "Run tests, produce deterministic proof, emit witness bundle" }
+  },
+  "agents": [
+    "setup-agent",
+    "ml-agent",
+    "ops-agent"
+  ]
+}
