@@ -726,4 +726,4 @@ class Observatory {
   }
 }
 
-new Observatory();
+window._obs = new Observatory();
