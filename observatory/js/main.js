@@ -436,24 +436,35 @@ class Observatory {
   // ---- WebSocket live data ----
 
   _autoDetectLive() {
-    // Probe sensing server health on same origin, then Hetzner backend, then common ports
+    // Only probe https:// candidates to avoid mixed-content blocks on Vercel (HTTPS)
+    const pageIsHttps = window.location.protocol === 'https:';
     const host = window.location.hostname || 'localhost';
-    const candidates = [
-      window.location.origin,                   // same origin (e.g. :3000)
-      'https://87.99.158.55',                   // Hetzner sensing server (TLS via nginx)
-      `http://${host}:8765`,                     // default WS port
-      `http://${host}:3000`,                     // default HTTP port
-    ];
-    // Deduplicate
+    const candidates = pageIsHttps
+      ? [
+          'https://87.99.158.55',               // Hetzner sensing server
+          window.location.origin,               // same origin
+        ]
+      : [
+          window.location.origin,
+          `http://${host}:3000`,
+          `http://${host}:8765`,
+        ];
+
     const unique = [...new Set(candidates)];
 
     const tryNext = (i) => {
       if (i >= unique.length) {
-        console.log('[Observatory] No sensing server detected, using demo mode');
+        // Last resort: try connecting WS directly with the saved wsUrl
+        if (this.settings.wsUrl) {
+          console.log('[Observatory] Auto-detect exhausted, trying saved wsUrl:', this.settings.wsUrl);
+          this._connectWS(this.settings.wsUrl);
+        } else {
+          console.log('[Observatory] No sensing server detected, using demo mode');
+        }
         return;
       }
       const base = unique[i];
-      fetch(`${base}/health`, { signal: AbortSignal.timeout(1500) })
+      fetch(`${base}/health`, { signal: AbortSignal.timeout(2000) })
         .then(r => r.ok ? r.json() : Promise.reject())
         .then(data => {
           if (data && data.status === 'ok') {
