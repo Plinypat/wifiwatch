@@ -151,7 +151,7 @@ void app_main(void) {
     }
 
     // Start CSI capture — frames stream to on_csi_frame → ws_client_send
-    csi_capture_init(s_cfg.channel, on_csi_frame);
+    csi_capture_init(s_cfg.channel, s_cfg.mesh_slot, on_csi_frame);
     ESP_LOGI(TAG, "CSI streaming   ch=%d  slot=%d/%d",
              s_cfg.channel, s_cfg.mesh_slot, s_cfg.mesh_total);
 

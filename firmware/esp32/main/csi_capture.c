@@ -58,8 +58,9 @@ static void csi_callback(void *ctx, wifi_csi_info_t *info) {
     s_on_frame(s_json_buf, (size_t)pos);
 }
 
-void csi_capture_init(uint8_t channel, csi_frame_cb_t on_frame) {
+void csi_capture_init(uint8_t channel, uint8_t slot, csi_frame_cb_t on_frame) {
     s_on_frame = on_frame;
+    s_slot = slot;
 
     s_json_buf = malloc(JSON_BUF_SIZE);
     if (!s_json_buf) {
