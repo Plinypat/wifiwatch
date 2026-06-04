@@ -160,6 +160,15 @@ esp32Wss.on('connection', (ws, req) => {
   ws.on('error', () => state.nodes.delete(nodeId));
 });
 
+// ---- State ----
+
+const state = {
+  activeApp: process.env.DEFAULT_APP || 'presence',
+  appParams: {},
+  nodes: new Map(),
+  framesSent: 0,
+};
+
 // ---- Demo emitter (when no ESP32 is connected) ----
 
 const demoEmitter = new DemoEmitter();
@@ -173,15 +182,6 @@ setInterval(() => {
     if (frame) broadcast(frame);
   }
 }, DEMO_INTERVAL_MS);
-
-// ---- State ----
-
-const state = {
-  activeApp: process.env.DEFAULT_APP || 'presence',
-  appParams: {},
-  nodes: new Map(),
-  framesSent: 0,
-};
 
 // ---- Start ----
 
