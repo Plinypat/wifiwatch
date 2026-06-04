@@ -68,6 +68,8 @@ function _getBuffer(slot) {
       variance: 0,       // running variance estimate
       presence: false,
       confidence: 0,
+      smoothHeart: 0,    // EMA-smoothed heart rate
+      smoothBreath: 0,   // EMA-smoothed breathing rate
     });
   }
   return _buffers.get(slot);
@@ -143,19 +145,22 @@ function _detectPresence(buf, params = {}) {
 function _extractVitals(buf) {
   if (buf.csi.length < 32) return { heart_rate_bpm: 0, breathing_rate_bpm: 0 };
 
-  // Use mean amplitude across subcarriers as the 1D signal
   const signal = buf.csi.map(frame => _mean(_amplitude(frame)));
 
-  const breathEnergy = _bandpass(signal, 0.1, 0.5);   // 6–30 RPM
-  const heartEnergy  = _bandpass(signal, 0.8, 2.5);   // 48–150 BPM
+  const breathEnergy = _bandpass(signal, 0.1, 0.5);
+  const heartEnergy  = _bandpass(signal, 0.8, 2.5);
 
-  // Map energy to plausible rate — thresholds tuned for real CSI scale
-  const breathRate = breathEnergy > 0 ? 12 + Math.min(20, Math.sqrt(breathEnergy) * 2) : 0;
-  const heartRate  = heartEnergy  > 0 ? 55 + Math.min(75, Math.sqrt(heartEnergy)  * 5) : 0;
+  const rawBreath = breathEnergy > 0 ? 12 + Math.min(20, Math.sqrt(breathEnergy) * 2) : buf.smoothBreath || 14;
+  const rawHeart  = heartEnergy  > 0 ? 55 + Math.min(75, Math.sqrt(heartEnergy)  * 5) : buf.smoothHeart  || 65;
+
+  // EMA smoothing — alpha=0.1 means slow response, stable display
+  const alpha = 0.1;
+  buf.smoothBreath = buf.smoothBreath ? buf.smoothBreath + alpha * (rawBreath - buf.smoothBreath) : rawBreath;
+  buf.smoothHeart  = buf.smoothHeart  ? buf.smoothHeart  + alpha * (rawHeart  - buf.smoothHeart)  : rawHeart;
 
   return {
-    heart_rate_bpm:   Math.round(heartRate),
-    breathing_rate_bpm: Math.round(breathRate),
+    heart_rate_bpm:     Math.round(buf.smoothHeart),
+    breathing_rate_bpm: Math.round(buf.smoothBreath),
   };
 }
 
