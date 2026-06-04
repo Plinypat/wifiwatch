@@ -107,13 +107,13 @@ function _extractVitals(buf) {
   const breathEnergy = _bandpass(signal, 0.1, 0.5);   // 6–30 RPM
   const heartEnergy  = _bandpass(signal, 0.8, 2.5);   // 48–150 BPM
 
-  if (buf.csi.length === 32) {
-    console.log(`[vitals] breathEnergy=${breathEnergy.toFixed(4)} heartEnergy=${heartEnergy.toFixed(4)} signalLen=${signal.length}`);
-  }
-
   // Map energy to plausible rate — thresholds tuned for real CSI scale
   const breathRate = breathEnergy > 0 ? 12 + Math.min(20, Math.sqrt(breathEnergy) * 2) : 0;
   const heartRate  = heartEnergy  > 0 ? 55 + Math.min(75, Math.sqrt(heartEnergy)  * 5) : 0;
+
+  if (buf.csi.length % 32 === 0) {
+    console.log(`[vitals] breathE=${breathEnergy.toFixed(2)} heartE=${heartEnergy.toFixed(2)} → breath=${Math.round(breathRate)} bpm heart=${Math.round(heartRate)} bpm`);
+  }
 
   return {
     heart_rate_bpm:   Math.round(heartRate),
