@@ -90,8 +90,8 @@ function _detectPresence(buf, params = {}) {
     const channel = ampFrames.map(f => f[s] ?? 0);
     totalVar += _variance(channel);
   }
-  const normVar = Math.min(1, totalVar / (nSub * 50));
-  const presence = normVar > threshold * 0.3;
+  const normVar = Math.min(1, totalVar / (nSub * 5));
+  const presence = normVar > threshold * 0.05;
   const confidence = Math.min(0.99, 0.5 + normVar * 2);
   return { presence, confidence: presence ? confidence : 1 - confidence * 0.3 };
 }
