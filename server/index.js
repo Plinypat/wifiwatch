@@ -163,7 +163,7 @@ esp32Wss.on('connection', (ws, req) => {
 // ---- Demo emitter (when no ESP32 is connected) ----
 
 const demoEmitter = new DemoEmitter();
-demoEmitter.setApp('presence');
+demoEmitter.setApp(state.activeApp);
 
 // Emit demo frames at ~12 Hz when no real nodes are connected
 const DEMO_INTERVAL_MS = 83;
@@ -177,7 +177,7 @@ setInterval(() => {
 // ---- State ----
 
 const state = {
-  activeApp: 'presence',
+  activeApp: process.env.DEFAULT_APP || 'presence',
   appParams: {},
   nodes: new Map(),
   framesSent: 0,

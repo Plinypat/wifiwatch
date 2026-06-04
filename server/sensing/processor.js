@@ -90,10 +90,9 @@ function _detectPresence(buf, params = {}) {
     const channel = ampFrames.map(f => f[s] ?? 0);
     totalVar += _variance(channel);
   }
-  const normVar = Math.min(1, totalVar / (nSub * 5));
-  const presence = true; // always report present when CSI is flowing
+  const normVar = Math.min(1, totalVar / (nSub * 100));
+  const presence = normVar >= threshold;
   const confidence = Math.min(0.99, 0.5 + normVar * 2);
-  console.log(`[csi] nSub=${nSub} totalVar=${totalVar.toFixed(2)} normVar=${normVar.toFixed(4)}`);
   return { presence, confidence };
 }
 
@@ -110,10 +109,6 @@ function _extractVitals(buf) {
   // Map energy to plausible rate — thresholds tuned for real CSI scale
   const breathRate = breathEnergy > 0 ? 12 + Math.min(20, Math.sqrt(breathEnergy) * 2) : 0;
   const heartRate  = heartEnergy  > 0 ? 55 + Math.min(75, Math.sqrt(heartEnergy)  * 5) : 0;
-
-  if (buf.csi.length % 32 === 0) {
-    console.log(`[vitals] breathE=${breathEnergy.toFixed(2)} heartE=${heartEnergy.toFixed(2)} → breath=${Math.round(breathRate)} bpm heart=${Math.round(heartRate)} bpm`);
-  }
 
   return {
     heart_rate_bpm:   Math.round(heartRate),
