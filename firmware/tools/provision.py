@@ -67,31 +67,33 @@ def build_nvs_csv(cfg: dict) -> str:
 
 
 def find_nvs_gen():
-    """Locate nvs_partition_gen.py from IDF or esptool package."""
-    candidates = []
+    """Locate nvs_partition_gen.py and a suitable python to run it."""
+    idf_path = os.environ.get("IDF_PATH", "")
 
-    idf_path = os.environ.get("IDF_PATH")
+    script_candidates = []
     if idf_path:
-        candidates.append(os.path.join(idf_path, "components", "nvs_flash",
-                                       "nvs_partition_generator", "nvs_partition_gen.py"))
+        script_candidates.append(os.path.join(
+            idf_path, "components", "nvs_flash",
+            "nvs_partition_generator", "nvs_partition_gen.py"))
 
-    # Common Windows IDF install locations
     for ver in ["v6.0.1", "v5.4.1", "v5.3.1", "v5.2.1"]:
-        candidates.append(
-            os.path.join("D:\\esp\\.espressif", ver, "esp-idf", "components",
-                         "nvs_flash", "nvs_partition_generator", "nvs_partition_gen.py"))
+        script_candidates.append(os.path.join(
+            "D:\\esp\\.espressif", ver, "esp-idf", "components",
+            "nvs_flash", "nvs_partition_generator", "nvs_partition_gen.py"))
 
-    try:
-        import esptool
-        base = os.path.dirname(esptool.__file__)
-        candidates.append(os.path.join(base, "nvs_partition_gen.py"))
-    except ImportError:
-        pass
+    script = next((p for p in script_candidates if os.path.exists(p)), None)
+    if not script:
+        return None, None
 
-    for p in candidates:
-        if os.path.exists(p):
-            return p
-    return None
+    # Find a python that can run it — prefer IDF venv pythons
+    python_candidates = []
+    for ver in ["v6.0.1", "v5.4.1", "v5.3.1", "v5.2.1"]:
+        python_candidates.append(
+            os.path.join("C:\\Espressif\\tools\\python", ver, "venv", "Scripts", "python.exe"))
+    python_candidates.append(sys.executable)
+
+    python = next((p for p in python_candidates if os.path.exists(p)), sys.executable)
+    return python, script
 
 
 def main():
@@ -148,25 +150,20 @@ def main():
             f.write(csv_content)
 
         # Generate NVS binary
-        nvs_gen = find_nvs_gen()
-        if nvs_gen:
-            cmd = [sys.executable, nvs_gen, "generate",
+        nvs_python, nvs_script = find_nvs_gen()
+        if nvs_script:
+            cmd = [nvs_python, nvs_script, "generate",
                    csv_path, bin_path, str(NVS_PARTITION_SIZE)]
         else:
-            # Fall back to esptool's built-in nvs_partition_gen
-            cmd = ["python3", "-m", "esptool.nvs_partition_gen", "generate",
-                   csv_path, bin_path, str(NVS_PARTITION_SIZE)]
+            print("ERROR: Could not find nvs_partition_gen.py.")
+            print("Make sure IDF_PATH is set or ESP-IDF is installed at D:\\esp\\.espressif\\")
+            sys.exit(1)
 
         print(f"\nGenerating NVS image...")
+        print(f"  Using: {nvs_python}")
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
-            # Try nvs_partition_gen as an installed script via sys.executable
-            cmd2 = [sys.executable, "-m", "nvs_partition_gen", "generate",
-                    csv_path, bin_path, str(NVS_PARTITION_SIZE)]
-            result = subprocess.run(cmd2, capture_output=True, text=True)
-        if result.returncode != 0:
             print("ERROR: Could not generate NVS image.")
-            print("Make sure IDF_PATH is set or run: pip install esptool")
             print(result.stderr)
             sys.exit(1)
 
