@@ -145,6 +145,7 @@ export class HudController {
     this._obs = observatory;
     this._settingsOpen = false;
     this._rssiHistory = [];
+    this._sparklineLastTs = null;
     this._sparklineCtx = document.getElementById('rssi-sparkline')?.getContext('2d');
 
     // Lerp state for smooth vital-sign transitions
@@ -477,10 +478,23 @@ export class HudController {
   updateSparkline(data) {
     const rssi = data?.features?.mean_rssi ?? data?.rssi_dbm;
     if (rssi == null || !this._sparklineCtx) return;
+    // Only append when a new frame has arrived (data.ts changed) to avoid
+    // scrolling at 60 fps from the animation loop
+    const frameTs = data?.ts ?? null;
+    if (frameTs === this._sparklineLastTs) {
+      this._redrawSparkline();
+      return;
+    }
+    this._sparklineLastTs = frameTs;
     this._rssiHistory.push(rssi);
     if (this._rssiHistory.length > 60) this._rssiHistory.shift();
 
+    this._redrawSparkline();
+  }
+
+  _redrawSparkline() {
     const ctx = this._sparklineCtx;
+    if (!ctx) return;
     const w = ctx.canvas.width, h = ctx.canvas.height;
     ctx.clearRect(0, 0, w, h);
     if (this._rssiHistory.length < 2) return;

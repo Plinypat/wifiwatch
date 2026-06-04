@@ -147,11 +147,18 @@ function _detectPresence(buf, params = {}) {
 function _extractVitals(buf) {
   if (buf.csi.length < 32) return { heart_rate_bpm: 0, breathing_rate_bpm: 0 };
 
+  // Compute actual sample rate from timestamps (ESP32 sends at WiFi packet rate, not 12 Hz)
+  const N = buf.csi.length;
+  const actualRate = buf.ts.length >= 2
+    ? (N - 1) / (buf.ts[N - 1] - buf.ts[0])
+    : 12;
+  const sampleRate = Math.max(5, Math.min(50, actualRate)); // clamp to sane range
+
   const signal = buf.csi.map(frame => _mean(_amplitude(frame)));
 
   // Dominant frequency in each band → direct rate, no energy-magnitude mapping
-  const { freq: breathHz, energy: bEnergy } = _dominantFreq(signal, 0.1, 0.5);
-  const { freq: heartHz,  energy: hEnergy } = _dominantFreq(signal, 0.8, 2.5);
+  const { freq: breathHz, energy: bEnergy } = _dominantFreq(signal, 0.1, 0.5, sampleRate);
+  const { freq: heartHz,  energy: hEnergy } = _dominantFreq(signal, 0.8, 2.0, sampleRate);
 
   const rawBreath = bEnergy > 0 ? breathHz * 60 : buf.smoothBreath || 14;
   const rawHeart  = hEnergy > 0 ? heartHz  * 60 : buf.smoothHeart  || 65;
