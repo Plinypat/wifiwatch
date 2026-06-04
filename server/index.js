@@ -51,15 +51,15 @@ app.get('/api/status', (_req, res) => {
 
 // Map Observatory scenario names → server scenario IDs
 const SCENARIO_MAP = {
-  single_breathing: 'single_breathing', vitals: 'single_breathing',
-  sleep_monitoring: 'sleep_monitoring', sleep: 'sleep_monitoring',
-  two_walking: 'two_walking', fall_event: 'fall_event',
-  intrusion_detect: 'intrusion_detect', gesture_control: 'gesture_control',
-  crowd_occupancy: 'crowd_occupancy', search_rescue: 'search_rescue',
-  elderly_care: 'elderly_care', fitness_tracking: 'fitness_tracking',
-  security_patrol: 'security_patrol', empty_room: 'empty_room',
-  presence: 'single_breathing', pose: 'two_walking',
-  mat: 'search_rescue', pointcloud: 'two_walking',
+  single_breathing: 'vitals', vitals: 'vitals',
+  sleep_monitoring: 'vitals', sleep: 'vitals',
+  two_walking: 'presence', fall_event: 'presence',
+  intrusion_detect: 'presence', gesture_control: 'presence',
+  crowd_occupancy: 'presence', search_rescue: 'mat',
+  elderly_care: 'presence', fitness_tracking: 'presence',
+  security_patrol: 'presence', empty_room: 'presence',
+  presence: 'presence', pose: 'pose',
+  mat: 'mat', pointcloud: 'pose',
 };
 
 app.post('/api/app/start', (req, res) => {
