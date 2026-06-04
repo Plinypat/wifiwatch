@@ -157,7 +157,8 @@ esp32Wss.on('connection', (ws, req) => {
       if (node) node.frames++;
 
       // Process CSI frame → SensingFrame and broadcast to frontend
-      const sensingFrame = processCSI(csiFrame, state.activeApp, state.appParams);
+      const mappedApp = SCENARIO_MAP[state.activeApp] || state.activeApp;
+      const sensingFrame = processCSI(csiFrame, mappedApp, state.appParams);
       if (sensingFrame) broadcast(sensingFrame);
     } catch (err) {
       console.warn(`[esp32] Bad frame from ${nodeId}:`, err.message);
