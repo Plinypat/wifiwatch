@@ -91,9 +91,10 @@ function _detectPresence(buf, params = {}) {
     totalVar += _variance(channel);
   }
   const normVar = Math.min(1, totalVar / (nSub * 5));
-  const presence = normVar > threshold * 0.05;
+  const presence = true; // always report present when CSI is flowing
   const confidence = Math.min(0.99, 0.5 + normVar * 2);
-  return { presence, confidence: presence ? confidence : 1 - confidence * 0.3 };
+  console.log(`[csi] nSub=${nSub} totalVar=${totalVar.toFixed(2)} normVar=${normVar.toFixed(4)}`);
+  return { presence, confidence };
 }
 
 /** Vital signs from CSI — returns { heart_rate_bpm, breathing_rate_bpm } */
