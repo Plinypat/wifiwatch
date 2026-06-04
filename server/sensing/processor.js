@@ -122,7 +122,7 @@ function _bandpass(signal, lowHz, highHz, sampleRate = 12) {
 
 /** Presence detection via CSI variance threshold */
 function _detectPresence(buf, params = {}) {
-  const threshold = params.threshold ?? 0.6;
+  const threshold = params.threshold ?? 0.05;
   if (buf.csi.length < 8) return { presence: false, confidence: 0 };
 
   // Compute per-subcarrier variance across last N frames
