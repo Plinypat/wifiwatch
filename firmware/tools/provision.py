@@ -178,9 +178,8 @@ def main():
 
         # Flash NVS partition at offset 0x9000 (matches partitions.csv)
         print(f"\nFlashing NVS to {port}...")
-        esptool_python, _ = find_nvs_gen()  # reuse IDF venv python
         flash_cmd = [
-            esptool_python, "-m", "esptool",
+            sys.executable, "-m", "esptool",
             "--chip", "auto",
             "--port", port,
             "--baud", str(args.baud),
