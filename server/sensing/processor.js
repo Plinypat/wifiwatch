@@ -102,24 +102,26 @@ function _amplitude(csi) {
   return amp;
 }
 
-/** Band-pass filter (simple FIR) for vital signs */
-function _bandpass(signal, lowHz, highHz, sampleRate = 12) {
-  // Very simple: compute energy in frequency band via DFT on last N samples
+/** Find dominant frequency (Hz) within a band via DFT peak detection */
+function _dominantFreq(signal, lowHz, highHz, sampleRate = 12) {
   const N = signal.length;
-  if (N < 4) return 0;
-  let energy = 0;
+  if (N < 8) return (lowHz + highHz) / 2;
+
+  let peakEnergy = -1;
+  let peakFreq = (lowHz + highHz) / 2;
+
   for (let k = 1; k < N / 2; k++) {
     const freq = (k * sampleRate) / N;
-    if (freq >= lowHz && freq <= highHz) {
-      let re = 0, im = 0;
-      for (let n = 0; n < N; n++) {
-        re += signal[n] * Math.cos((2 * Math.PI * k * n) / N);
-        im -= signal[n] * Math.sin((2 * Math.PI * k * n) / N);
-      }
-      energy += (re ** 2 + im ** 2) / N;
+    if (freq < lowHz || freq > highHz) continue;
+    let re = 0, im = 0;
+    for (let n = 0; n < N; n++) {
+      re += signal[n] * Math.cos((2 * Math.PI * k * n) / N);
+      im -= signal[n] * Math.sin((2 * Math.PI * k * n) / N);
     }
+    const energy = (re ** 2 + im ** 2) / N;
+    if (energy > peakEnergy) { peakEnergy = energy; peakFreq = freq; }
   }
-  return energy;
+  return { freq: peakFreq, energy: peakEnergy };
 }
 
 /** Presence detection via CSI variance threshold */
@@ -147,14 +149,15 @@ function _extractVitals(buf) {
 
   const signal = buf.csi.map(frame => _mean(_amplitude(frame)));
 
-  const breathEnergy = _bandpass(signal, 0.1, 0.5);
-  const heartEnergy  = _bandpass(signal, 0.8, 2.5);
+  // Dominant frequency in each band → direct rate, no energy-magnitude mapping
+  const { freq: breathHz, energy: bEnergy } = _dominantFreq(signal, 0.1, 0.5);
+  const { freq: heartHz,  energy: hEnergy } = _dominantFreq(signal, 0.8, 2.5);
 
-  const rawBreath = breathEnergy > 0 ? 12 + Math.min(20, Math.sqrt(breathEnergy) * 2) : buf.smoothBreath || 14;
-  const rawHeart  = heartEnergy  > 0 ? 55 + Math.min(75, Math.sqrt(heartEnergy)  * 5) : buf.smoothHeart  || 65;
+  const rawBreath = bEnergy > 0 ? breathHz * 60 : buf.smoothBreath || 14;
+  const rawHeart  = hEnergy > 0 ? heartHz  * 60 : buf.smoothHeart  || 65;
 
-  // EMA smoothing — alpha=0.1 means slow response, stable display
-  const alpha = 0.1;
+  // EMA smoothing alpha=0.15 — responsive but stable
+  const alpha = 0.15;
   buf.smoothBreath = buf.smoothBreath ? buf.smoothBreath + alpha * (rawBreath - buf.smoothBreath) : rawBreath;
   buf.smoothHeart  = buf.smoothHeart  ? buf.smoothHeart  + alpha * (rawHeart  - buf.smoothHeart)  : rawHeart;
 

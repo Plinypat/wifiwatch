@@ -121,7 +121,16 @@ frontendWss.on('connection', (ws, req) => {
   ws.on('error', () => frontendClients.delete(ws));
 });
 
-function broadcast(frame) {
+// Throttle live ESP32 broadcasts to ~12 Hz so the frontend graph doesn't race
+const BROADCAST_INTERVAL_MS = 83;
+let _lastBroadcast = 0;
+
+function broadcast(frame, throttle = false) {
+  if (throttle) {
+    const now = Date.now();
+    if (now - _lastBroadcast < BROADCAST_INTERVAL_MS) return;
+    _lastBroadcast = now;
+  }
   const payload = JSON.stringify(frame);
   for (const ws of frontendClients) {
     if (ws.readyState === ws.OPEN) {
@@ -159,7 +168,7 @@ esp32Wss.on('connection', (ws, req) => {
       // Process CSI frame → SensingFrame and broadcast to frontend
       const mappedApp = SCENARIO_MAP[state.activeApp] || state.activeApp;
       const sensingFrame = processCSI(csiFrame, mappedApp, state.appParams);
-      if (sensingFrame) broadcast(sensingFrame);
+      if (sensingFrame) broadcast(sensingFrame, true);
     } catch (err) {
       console.warn(`[esp32] Bad frame from ${nodeId}:`, err.message);
     }
