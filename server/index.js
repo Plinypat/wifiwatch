@@ -135,13 +135,24 @@ function broadcast(frame) {
 
 esp32Wss.on('connection', (ws, req) => {
   const ip = req.socket.remoteAddress;
-  const nodeId = `node_${ip.replace(/[.:]/g, '_')}`;
-  state.nodes.set(nodeId, { id: nodeId, ip, connected_at: new Date().toISOString(), frames: 0 });
-  console.log(`[esp32] Node connected: ${nodeId}`);
+  let nodeId = `node_${ip.replace(/[.:]/g, '_')}`;
+  let registered = false;
 
   ws.on('message', (raw) => {
     try {
       const csiFrame = JSON.parse(raw.toString());
+
+      // Assign stable node ID from slot on first frame
+      if (!registered) {
+        const slot = csiFrame.slot ?? 'x';
+        nodeId = `node_slot${slot}`;
+        if (!state.nodes.has(nodeId)) {
+          state.nodes.set(nodeId, { id: nodeId, ip, slot, connected_at: new Date().toISOString(), frames: 0 });
+          console.log(`[esp32] Node registered: ${nodeId} (ip=${ip})`);
+        }
+        registered = true;
+      }
+
       const node = state.nodes.get(nodeId);
       if (node) node.frames++;
 
