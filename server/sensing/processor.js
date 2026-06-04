@@ -16,6 +16,49 @@
 const _buffers = new Map();
 const BUFFER_LEN = 64;
 
+// Board positions in metres (x, z plane — y=0 is floor).
+// Equilateral triangle, ~7.5 m sides (~25 ft). Adjust to match real placement.
+const NODE_POSITIONS = {
+  0: [0,    0   ],   // slot 0 — e.g. front-left corner
+  1: [7.5,  0   ],   // slot 1 — e.g. front-right corner
+  2: [3.75, 6.5 ],   // slot 2 — e.g. rear-centre
+};
+// Centre of the triangle (used as fallback when only one board has data)
+const ROOM_CENTRE = [3.75, 2.17];
+
+/** Variance-weighted centroid of board positions → [x, z] person estimate */
+function _estimatePosition() {
+  const weights = [];
+  const positions = [];
+
+  for (const [slot, pos] of Object.entries(NODE_POSITIONS)) {
+    const buf = _buffers.get(Number(slot));
+    if (!buf || buf.csi.length < 8) continue;
+    const ampFrames = buf.csi.map(_amplitude);
+    const nSub = ampFrames[0].length;
+    let totalVar = 0;
+    for (let s = 0; s < nSub; s++) {
+      const ch = ampFrames.map(f => f[s] ?? 0);
+      totalVar += _variance(ch);
+    }
+    weights.push(totalVar);
+    positions.push(pos);
+  }
+
+  if (positions.length === 0) return ROOM_CENTRE;
+
+  const totalW = weights.reduce((a, b) => a + b, 0);
+  if (totalW === 0) return ROOM_CENTRE;
+
+  let x = 0, z = 0;
+  for (let i = 0; i < positions.length; i++) {
+    x += (weights[i] / totalW) * positions[i][0];
+    z += (weights[i] / totalW) * positions[i][1];
+  }
+  // Round to 2dp to avoid micro-jitter in wire format
+  return [Math.round(x * 100) / 100, Math.round(z * 100) / 100];
+}
+
 function _getBuffer(slot) {
   if (!_buffers.has(slot)) {
     _buffers.set(slot, {
@@ -169,13 +212,15 @@ export function processCSI(rawFrame, activeApp = 'presence', params = {}) {
 
   if (!presence) return baseFrame;
 
+  const [px, pz] = _estimatePosition();
+
   // App-specific enrichment
   switch (activeApp) {
     case 'vitals': {
       const vitals = _extractVitals(buf);
       baseFrame.vitals = vitals;
       baseFrame.persons = [{
-        id: 'p0', position: [0, 0, 0], motion_score: 15,
+        id: 'p0', position: [px, 0, pz], motion_score: 15,
         pose: 'standing', facing: 0,
         heart_rate_bpm: vitals.heart_rate_bpm,
         breathing_rate_bpm: vitals.breathing_rate_bpm,
@@ -184,13 +229,12 @@ export function processCSI(rawFrame, activeApp = 'presence', params = {}) {
       break;
     }
     case 'presence':
-      baseFrame.persons = [{ id: 'p0', position: [0, 0, 0], motion_score: 20, pose: 'standing', facing: 0 }];
+      baseFrame.persons = [{ id: 'p0', position: [px, 0, pz], motion_score: 20, pose: 'standing', facing: 0 }];
       baseFrame.estimated_persons = 1;
       break;
     case 'mat':
     case 'pose':
-      // Placeholder — real pose requires ML model
-      baseFrame.persons = [{ id: 'p0', position: [0, 0, 0], motion_score: 30, pose: 'standing', facing: 0 }];
+      baseFrame.persons = [{ id: 'p0', position: [px, 0, pz], motion_score: 30, pose: 'standing', facing: 0 }];
       baseFrame.estimated_persons = 1;
       break;
     default:
