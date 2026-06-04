@@ -6,7 +6,6 @@ idf_component_register(
         "ws_client.c"
     INCLUDE_DIRS "."
     REQUIRES
-        esp_websocket_client
         nvs_flash
         esp_wifi
         esp_event
