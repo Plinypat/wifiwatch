@@ -68,20 +68,29 @@ def build_nvs_csv(cfg: dict) -> str:
 
 def find_nvs_gen():
     """Locate nvs_partition_gen.py from IDF or esptool package."""
+    candidates = []
+
     idf_path = os.environ.get("IDF_PATH")
     if idf_path:
-        p = os.path.join(idf_path, "components", "nvs_flash", "nvs_partition_generator", "nvs_partition_gen.py")
-        if os.path.exists(p):
-            return p
-    # Try esptool package location
+        candidates.append(os.path.join(idf_path, "components", "nvs_flash",
+                                       "nvs_partition_generator", "nvs_partition_gen.py"))
+
+    # Common Windows IDF install locations
+    for ver in ["v6.0.1", "v5.4.1", "v5.3.1", "v5.2.1"]:
+        candidates.append(
+            os.path.join("D:\\esp\\.espressif", ver, "esp-idf", "components",
+                         "nvs_flash", "nvs_partition_generator", "nvs_partition_gen.py"))
+
     try:
         import esptool
         base = os.path.dirname(esptool.__file__)
-        p = os.path.join(base, "nvs_partition_gen.py")
-        if os.path.exists(p):
-            return p
+        candidates.append(os.path.join(base, "nvs_partition_gen.py"))
     except ImportError:
         pass
+
+    for p in candidates:
+        if os.path.exists(p):
+            return p
     return None
 
 
@@ -151,15 +160,15 @@ def main():
         print(f"\nGenerating NVS image...")
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
-            # Try alternate invocation
-            cmd2 = ["nvs_partition_gen.py", "generate",
+            # Try nvs_partition_gen as an installed script via sys.executable
+            cmd2 = [sys.executable, "-m", "nvs_partition_gen", "generate",
                     csv_path, bin_path, str(NVS_PARTITION_SIZE)]
             result = subprocess.run(cmd2, capture_output=True, text=True)
-            if result.returncode != 0:
-                print("ERROR: Could not generate NVS image.")
-                print("Make sure IDF_PATH is set or run: pip install esptool")
-                print(result.stderr)
-                sys.exit(1)
+        if result.returncode != 0:
+            print("ERROR: Could not generate NVS image.")
+            print("Make sure IDF_PATH is set or run: pip install esptool")
+            print(result.stderr)
+            sys.exit(1)
 
         print(f"  NVS image generated ({NVS_PARTITION_SIZE} bytes)")
 
